@@ -6,7 +6,8 @@ connectButton.addEventListener("click", () => {
     if (socket) {
         socket.close()
     }
-    socket = new WebSocket("ws://localhost:8765");
+    socket = new Connection();
+    console.log(typeof(socket))
     
     socket.addEventListener("open", (event) => {
         console.log("WebSocket connection opened");

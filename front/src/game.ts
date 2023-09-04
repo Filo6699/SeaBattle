@@ -1,30 +1,89 @@
-class Game {
-    canvas: HTMLCanvasElement;
-    ctx: CanvasRenderingContext2D;
-    cellSize: number;
-    offset: number[];
-    canvasSize: number[];
-    gridSize: number;
+const EMPTY = 0;
+const SHIP = 1;
+const MISS = 2;
+const HIT = 3;
+
+class Styles {
+    isActive: boolean = false;
+    active: string[];
+    inactive: string[];
 
     constructor() {
-        this.canvas = document.querySelector('#gameCanvas') as HTMLCanvasElement;
+        this.active   = ["#e9e9e9", "#69e8ff", "#a9a9a9", "#ff5d5d"];
+        this.inactive = ["#bcbcbc", "#1aaec9", "#6b6b6b", "#c91d1d"];
+    }
+
+    color(cell: number) {
+        if (this.isActive == true) {
+            return this.active[cell];
+        } else {
+            return this.inactive[cell];
+        }
+    }
+}
+
+class Listener {
+    eventType: string;
+    func: (...parameters: any[]) => void;
+
+    constructor(eventType: string, func: (...parameters: any[]) => void) {
+        this.eventType = eventType;
+        this.func = func;
+    }
+}
+
+class Game {
+    private canvas: HTMLCanvasElement;
+    private ctx: CanvasRenderingContext2D;
+    private offset: number[];
+
+    private cellSize: number;
+    private canvasSize: number[];
+    private gridSize: number;
+    private grid: number[][] = [];
+    private styles: Styles;
+
+    private isActive: boolean = false;
+    private isOwn: boolean;
+
+    private eventListeners: Listener[] = [];
+
+    constructor(canvas: HTMLCanvasElement, isOwn: boolean) {
+        this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D;
+        this.isOwn = isOwn;
 
         this.init();
         this.update();
     }
 
-    update() {
+    setActive(bool: boolean) {
+        this.isActive = bool;
+        this.styles.isActive = bool;
+    }
+
+    addEventListener(eventType: string, func: (...parameters: any[]) => void) {
+        let listener = new Listener(eventType, func);
+        this.eventListeners.push(listener);
+    }
+
+    private event(eventType: string, parameters: any[]) {
+        this.eventListeners.forEach(listener => {
+            if (listener.eventType == eventType) {
+                listener.func(...parameters);
+            }
+        });
+    }
+
+    private update() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.drawGrid();
-        // this.drawShips();
-        // this.drawShots();
 
         requestAnimationFrame(this.update.bind(this));
     } 
 
-    init() {
+    private init() {
         this.canvas.addEventListener('click', this.handleMouseClick.bind(this));
         this.canvas.addEventListener("mousemove", this.handleMouseMove.bind(this));
 
@@ -35,15 +94,51 @@ class Game {
             this.canvas.height - this.offset[1] * 2
         ];
         this.gridSize = 10;
+
+        for (let x = 0; x < this.gridSize; x++) {
+            this.grid[x] = [];
+            for (let y = 0; y < this.gridSize; y++) {
+                this.grid[x][y] = 0;
+            }
+        }
+
+        this.styles = new Styles();
+
+        // TODO: add field creation later
+        this.grid[2][2] = SHIP;
+        this.grid[2][3] = SHIP;
+        this.grid[3][2] = MISS;
+        this.grid[3][3] = MISS;
+        this.grid[4][2] = HIT;
+        this.grid[4][3] = HIT;
     }
 
-    drawGrid() {
+    setShips(ships: number[][]) {
+        ships.forEach(ship => {
+            let [x, y] = ship;
+            this.grid[x][y] = SHIP;
+        });
+    }
+
+    private drawGrid() {
         const gridSize = this.gridSize;
         const cellSize = this.cellSize;
         let ctx = this.ctx;
 
         ctx.strokeStyle = 'black';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 2;
+
+        for (let x = 0; x < this.gridSize; x++) {
+            for (let y = 0; y < this.gridSize; y++) {
+                let cell = this.grid[x][y];
+                ctx.fillStyle = this.styles.color(cell);
+                ctx.fillRect(
+                    this.offset[0] + cellSize * x,
+                    this.offset[1] + cellSize * y,
+                    cellSize, cellSize
+                )
+            }
+        }
 
         for (let row = 0; row < gridSize; row++) {
             for (let col = 0; col < gridSize; col++) {
@@ -56,7 +151,9 @@ class Game {
         }
     }
 
-    handleMouseClick(event: MouseEvent) {
+    private handleMouseClick(event: MouseEvent) {
+        if (this.isOwn == true) return;
+
         const rect = this.canvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left - this.offset[0];
         const mouseY = event.clientY - rect.top - this.offset[1];
@@ -71,18 +168,26 @@ class Game {
             clickedCol >= this.gridSize ||
             clickedRow >= this.gridSize) return;
 
-        document.querySelector("#messageLog").textContent = `${clickedRow} ${clickedCol}`;
+        this.event("click", [clickedCol, clickedRow]);
     }
     
-    handleMouseMove(event: MouseEvent) {
-        document.querySelector("#messageLog").textContent = `${mousePos}`;
+    getCell(x: number, y: number): number {
+        try {
+            return this.grid[x][y];
+        } catch (err) {}
     }
 
-    isMouseOnGrid(): boolean {
+    private handleMouseMove(event: MouseEvent) {}
+
+    private mousePosOnGrid(): number[] | null {
         let mx = mousePos[0] - this.canvas.offsetLeft - this.offset[0];
         let my = mousePos[1] - this.canvas.offsetTop - this.offset[1];
-        return mx >= 0 && my >= 0 && mx <= this.canvas.width - this.offset[0] * 2 && my <= this.canvas.height - this.offset[1] * 2
+        mx = Math.floor(mx / this.cellSize);
+        my = Math.floor(my / this.cellSize);
+        if (
+            mx < 0 || my < 0 ||
+            mx >= this.gridSize ||
+            my >= this.gridSize) return;
+        return [mx, my];
     }
 }
-
-const game = new Game();

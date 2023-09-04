@@ -34,6 +34,3 @@ class WebSocketClient {
 
     // Additional methods for sending data, closing the connection, etc.
 }
-
-// Creating an instance of the WebSocketClient class
-const client = new WebSocketClient("ws://example.com/socket");

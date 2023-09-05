@@ -12,7 +12,7 @@ def main():
 
     @server.listen("attack")
     async def test(packet, websocket: WebSocketServerProtocol):
-        data = {"type": "attack_response", "value": 0}
+        data = {"type": "attack_response", "value": 2, "position": packet['position']}
         await websocket.send(stringify(data))
 
     server.run()

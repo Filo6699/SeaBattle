@@ -17,16 +17,6 @@ class Styles {
     }
 }
 
-class Listener {
-    eventType: string;
-    func: (...parameters: any[]) => void;
-
-    constructor(eventType: string, func: (...parameters: any[]) => void) {
-        this.eventType = eventType;
-        this.func = func;
-    }
-}
-
 class Game {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
@@ -40,7 +30,7 @@ class Game {
     private isActive: boolean = false;
     private isOwn: boolean;
 
-    private eventListeners: Listener[] = [];
+    onClick: (x, y) => void = null;
 
     constructor(canvas: HTMLCanvasElement, isOwn: boolean) {
         this.canvas = canvas;
@@ -54,19 +44,6 @@ class Game {
     setActive(bool: boolean) {
         this.isActive = bool;
         this.styles.isActive = bool;
-    }
-
-    addEventListener(eventType: string, func: (...parameters: any[]) => void) {
-        let listener = new Listener(eventType, func);
-        this.eventListeners.push(listener);
-    }
-
-    private event(eventType: string, parameters: any[]) {
-        this.eventListeners.forEach(listener => {
-            if (listener.eventType == eventType) {
-                listener.func(...parameters);
-            }
-        });
     }
 
     private update() {
@@ -152,8 +129,10 @@ class Game {
             clickedRow < 0 ||
             clickedCol >= this.gridSize ||
             clickedRow >= this.gridSize) return;
-
-        this.event("click", [clickedCol, clickedRow]);
+        
+        if (this.onClick) {
+            this.onClick(clickedCol, clickedRow);
+        }
     }
     
     getCell(x: number, y: number): number {
@@ -167,16 +146,4 @@ class Game {
     }
 
     private handleMouseMove(event: MouseEvent) {}
-
-    private mousePosOnGrid(): number[] | null {
-        let mx = mousePos[0] - this.canvas.offsetLeft - this.offset[0];
-        let my = mousePos[1] - this.canvas.offsetTop - this.offset[1];
-        mx = Math.floor(mx / this.cellSize);
-        my = Math.floor(my / this.cellSize);
-        if (
-            mx < 0 || my < 0 ||
-            mx >= this.gridSize ||
-            my >= this.gridSize) return;
-        return [mx, my];
-    }
 }

@@ -4,7 +4,9 @@ const network = new GameNetwork("ws://localhost:8765")
 
 
 function click(x: number, y: number) {
-    network.send(AttackPacket(x, y));
+    let is_connected = network.send(AttackPacket(x, y));
+    console.log("[NETWORK] is_connected: ", is_connected);
+    if (!is_connected) return;
     game2.setActive(false);
 }
 

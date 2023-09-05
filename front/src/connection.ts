@@ -10,39 +10,41 @@ class Listener {
 
 abstract class WebSocketClient {
     url: string;
-    ws: WebSocket;
-    reconnect_attempts: number = 0;
+    socket: WebSocket;
 
     constructor(url: string) {
         this.url = url;
         this.connect();
-
-        this.ws.onopen = this.onOpen.bind(this);
-        this.ws.onmessage = this.onMessage.bind(this);
-        this.ws.onerror = this.onError.bind(this);
-        this.ws.onclose = this.onClose.bind(this);
     }
 
-    private connect() {
-        try {
-            this.ws = new WebSocket(this.url);
-        } catch (err) {
-            console.log("[ERROR] ", err);
-            // catch doesn't work bruh
+    connect() {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+            this.socket = new WebSocket(this.url);
+
+            this.socket.onopen = this.onOpen.bind(this);
+            this.socket.onmessage = this.onMessage.bind(this);
+
+            this.socket.addEventListener('close', (event) => {
+                console.log('WebSocket closed with code:', event.code);
+
+                setTimeout(() => {
+                    this.connect();
+                }, 3000);
+            });
+
+            this.socket.addEventListener('error', (error) => {
+                console.error('WebSocket error:', error);
+
+                setTimeout(() => {
+                    this.connect();
+                }, 3000);
+            });
         }
     }
 
     abstract onOpen(event: Event): void;
 
     abstract onMessage(event: MessageEvent): void;
-
-    onError(event: Event) {
-        console.error("WebSocket error:", event);
-    }
-
-    onClose(event: CloseEvent) {
-        console.log("WebSocket connection closed:", event);
-    }
 }
 
 
@@ -60,9 +62,11 @@ class GameNetwork extends WebSocketClient {
         this.eventListeners.push(listener);
     }
 
-    send(data: any) {
+    send(data: any): boolean {
+        if (this.socket.readyState !== WebSocket.OPEN) return false;
         data['auth'] = this.authToken;
-        this.ws.send(JSON.stringify(data));
+        this.socket.send(JSON.stringify(data));
+        return true;
     }
 
     onOpen(event: Event): void {}

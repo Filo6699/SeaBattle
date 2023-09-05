@@ -22,7 +22,6 @@ class Server:
         return decorator
 
     def handle_pocket(self, data: dict, websocket: WebSocketServerProtocol):
-        print(data)
         if not data or not data.get("type") or not data.get("auth"):
             return
         
@@ -30,7 +29,6 @@ class Server:
         if not user:
             return
         
-        print("though")
         for l in self.listeners:
             if l[1] == data['type']:
                 asyncio.create_task(l[0](data, websocket))

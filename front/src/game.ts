@@ -1,8 +1,3 @@
-const EMPTY = 0;
-const SHIP = 1;
-const MISS = 2;
-const HIT = 3;
-
 class Styles {
     isActive: boolean = false;
     active: string[];
@@ -38,7 +33,6 @@ class Game {
     private offset: number[];
 
     private cellSize: number;
-    private canvasSize: number[];
     private gridSize: number;
     private grid: number[][] = [];
     private styles: Styles;
@@ -89,10 +83,6 @@ class Game {
 
         this.cellSize = 40;
         this.offset = [10, 10];
-        this.canvasSize = [
-            this.canvas.width - this.offset[0] * 2,
-            this.canvas.height - this.offset[1] * 2
-        ];
         this.gridSize = 10;
 
         for (let x = 0; x < this.gridSize; x++) {
@@ -105,12 +95,6 @@ class Game {
         this.styles = new Styles();
 
         // TODO: add field creation later
-        this.grid[2][2] = SHIP;
-        this.grid[2][3] = SHIP;
-        this.grid[3][2] = MISS;
-        this.grid[3][3] = MISS;
-        this.grid[4][2] = HIT;
-        this.grid[4][3] = HIT;
     }
 
     setShips(ships: number[][]) {
@@ -152,7 +136,8 @@ class Game {
     }
 
     private handleMouseClick(event: MouseEvent) {
-        if (this.isOwn == true) return;
+        if (this.isOwn == true ||
+            this.isActive == false) return;
 
         const rect = this.canvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left - this.offset[0];
@@ -175,6 +160,10 @@ class Game {
         try {
             return this.grid[x][y];
         } catch (err) {}
+    }
+    
+    setCell(x: number, y: number, state: number): void {
+        this.grid[x][y] = state;
     }
 
     private handleMouseMove(event: MouseEvent) {}

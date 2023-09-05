@@ -1,6 +1,6 @@
-class WebSocketClient {
-    private url: string;
-    private ws: WebSocket;
+abstract class WebSocketClient {
+    url: string;
+    ws: WebSocket;
 
     constructor(url: string) {
         this.url = url;
@@ -12,25 +12,35 @@ class WebSocketClient {
         this.ws.onclose = this.onClose.bind(this);
     }
 
-    private onOpen(event: Event) {
-        console.log("WebSocket connection opened");
-        // You can perform any initialization or actions when the connection opens here
-    }
+    abstract onOpen(event: Event): void;
 
-    private onMessage(event: MessageEvent) {
-        console.log(`Received message: ${event.data}`);
-        // Handle the incoming message
-    }
+    abstract onMessage(event: MessageEvent): void;
 
-    private onError(event: Event) {
+    onError(event: Event) {
         console.error("WebSocket error:", event);
-        // Handle errors
     }
 
-    private onClose(event: CloseEvent) {
+    onClose(event: CloseEvent) {
         console.log("WebSocket connection closed:", event);
-        // Handle the connection closure
+    }
+}
+
+
+class GameNetwork extends WebSocketClient {
+    authToken: string | null;
+    constructor(url: string) {
+        super(url);
+        this.authToken = "todo";
     }
 
-    // Additional methods for sending data, closing the connection, etc.
+    send(data: any) {
+        data['auth'] = this.authToken;
+        this.ws.send(JSON.stringify(data));
+    }
+
+    onOpen(event: Event): void {}
+
+    onMessage(event: MessageEvent): void {
+        console.log("[EVENT] ", event.data);
+    }
 }

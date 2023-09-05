@@ -1,9 +1,11 @@
-const game = new Game(document.querySelector("#gameCanvas"), false);
+const game1 = new Game(document.querySelector("#gameCanvas"),  true);
+const game2 = new Game(document.querySelector("#gameCanvas2"), false);
+const network = new GameNetwork("ws://localhost:8765")
 
 
-function testClick(x: number, y: number) {
-    console.log(`click info: x=${x} y=${y}`);
+function click(x: number, y: number) {
+    network.send(AttackPacket(x, y));
 }
 
-game.setActive(true);
-game.addEventListener("click", testClick);
+game2.setActive(true);
+game2.addEventListener("click", click);

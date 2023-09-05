@@ -1,14 +1,22 @@
 import dotenv
-from utils.mongo import DB
-from back.server import Server
+from json import dumps as stringify
+from back.utils.mongo import DB
+from back.game_server import Server
+from websockets.server import WebSocketServerProtocol
 
 
-if __name__ == "__main__":
+def main():
     dotenv.load_dotenv()
     DB.connect()
     server = Server()
+
+    @server.listen("attack")
+    async def test(packet, websocket: WebSocketServerProtocol):
+        data = {"type": "attack_response", "value": 0}
+        await websocket.send(stringify(data))
+
     server.run()
 
-    @server.pocket_listener("attack")
-    async def test(data):
-        print("no way", data)
+
+if __name__ == "__main__":
+    main()

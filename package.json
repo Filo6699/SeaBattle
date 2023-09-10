@@ -1,0 +1,14 @@
+{
+  "name": "seabattle",
+  "module": "front/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "scripts": {
+    "build": "bun run front/build.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
